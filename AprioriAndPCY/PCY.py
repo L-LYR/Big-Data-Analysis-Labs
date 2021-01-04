@@ -44,13 +44,18 @@ def genCkByBitMap(Lk: set, bitmap: int, bucketSize: int, k: int, hashFunc) -> se
 
 
 def pcy(baskets: list, minSupport: float, minConfidence: float,
-        maxK: int, bucketSize: int, hashFunc) -> (list, int, defaultdict):
+        maxK: int, bucketSize: int, hashFunc1, hashFunc2) -> (list, int, defaultdict):
     C1 = ap.genC1(baskets)
     L1, sup1 = ap.genFreqSet(baskets, C1, minSupport)
 
     # 生成2项候选集时，进行PCY优化
-    bitmap1 = hashPairs(baskets, L1, bucketSize, minSupport, hashFunc)
-    Ck = genCkByBitMap(L1, bitmap1, bucketSize, 2, hashFunc)
+    bitmap1 = hashPairs(baskets, L1, bucketSize, minSupport, hashFunc1)
+    Ck1 = genCkByBitMap(L1, bitmap1, bucketSize, 2, hashFunc1)
+
+    bitmap2 = hashPairs(baskets, L1, bucketSize, minSupport, hashFunc2)
+    Ck2 = genCkByBitMap(L1, bitmap2, bucketSize, 2, hashFunc2)
+    Ck = Ck1 & Ck2
+
     L = [set(), L1]
     sup = [defaultdict(float), sup1]
 
@@ -70,22 +75,35 @@ if __name__ == '__main__':
     minConf = 0.5
     minSup = 0.005
     maxk = 4
-    bucketSize = 10009
+    bucketSize = 4999
     idMap, dataSet = ap.loadData("./src/Groceries.csv")
     itemBaskets = list(map(frozenset, dataSet))
 
 
-    def hashFuncForPair(pair: set) -> int:
+    def hashFuncForPair1(pair: set) -> int:
+        # sha1 = hashlib.sha1()
+        hashVal = 1
+        for item in pair:
+            # sha1.update(idMap[item].encode("utf-8"))
+            hashVal *= hash(idMap[item])
+            # hashVal += hash(idMap[item])
+        # return int(sha1.hexdigest(), 16)
+        return hashVal
+
+
+    def hashFuncForPair2(pair: set) -> int:
         sha1 = hashlib.sha1()
+        # hashVal = 0
         for item in pair:
             sha1.update(idMap[item].encode("utf-8"))
             # hashVal *= hash(idMap[item])
             # hashVal += hash(idMap[item])
         return int(sha1.hexdigest(), 16)
+        # return hashVal
 
 
     startTime = time()
-    sups, bitmap1, rules = pcy(itemBaskets, minSup, minConf, maxk, bucketSize, hashFuncForPair)
+    sups, bitmap1, rules = pcy(itemBaskets, minSup, minConf, maxk, bucketSize, hashFuncForPair1, hashFuncForPair2)
     endTime = time()
     print("Time cost: {}".format(endTime - startTime))
 
