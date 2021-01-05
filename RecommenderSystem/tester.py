@@ -27,8 +27,8 @@ def predictTest(predictor: Predictor, testSet: List[Tuple[int, int, float]], res
 
 
 def testUser2User(rankMat: np.ndarray, testCases: List[Tuple[int, int, float]]) -> None:
-    topK: int = 94
-    hashFuncNum: int = 50
+    topK: int = 100
+    hashFuncNum: int = 200
     threshold: float = 2.5
     resFile: str = "./res/user2user"
     # test basic user-to-user
